@@ -30,7 +30,7 @@ ui <- fluidPage(
       # Pulsatility Index portal
       sliderInput(
         inputId = "portal",
-        label   = "Índice de pulsatilidad vena portal (%)",
+        label   = "Índice de pulsatilidad vena porta (%)",
         min     = 0,
         max     = 100,
         value   = 10,
@@ -41,9 +41,10 @@ ui <- fluidPage(
         inputId = "renal",
         label   = "Doppler vena intrarrenal",
         choices = c(
-          "Continuo monophasic (Normal)"                   = "normal",
-          "Bifásico discontinuo (Mild Abn)"                 = "mild",
-          "Monofásico discontinuo solo diastólico (Severe)" = "severe"
+          "No evaluado"                                                  = "normal",
+          "Continuo monophasic (Normal)"                                 = "normal",
+          "Bifásico discontinuo (Levemente anormal)"                     = "mild",
+          "Monofásico discontinuo solo diastólico (Severamente anormal)" = "severe"
         )
       )
     )),
