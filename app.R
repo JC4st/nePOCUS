@@ -5,7 +5,7 @@ library(tidyverse)
 VExUStexto <- function(input, vu_score) {
   if (input$renal == "no evaluado") {
     paste("Grado VExUS:", vu_score, "\n",
-          "Patron de vena renal no evaluado por el médico tratante")
+          "Patron de vena renal no evaluado")
   } else {
     paste("Grado VExUS:", vu_score)
   }
@@ -24,7 +24,7 @@ ui <- fluidPage(
           inputId = "lines",
           label   = "R1",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         ),
@@ -32,7 +32,7 @@ ui <- fluidPage(
           inputId = "lines2",
           label   = "R2",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         ),
@@ -40,7 +40,7 @@ ui <- fluidPage(
           inputId = "lines3",
           label   = "R3",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         ),
@@ -48,7 +48,7 @@ ui <- fluidPage(
           inputId = "lines4",
           label   = "R4",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         ),
@@ -56,7 +56,7 @@ ui <- fluidPage(
           inputId = "lines5",
           label   = "L1",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         ),
@@ -64,7 +64,7 @@ ui <- fluidPage(
           inputId = "lines6",
           label   = "L2",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         ),
@@ -72,7 +72,7 @@ ui <- fluidPage(
           inputId = "lines7",
           label   = "L3",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         ),
@@ -80,7 +80,7 @@ ui <- fluidPage(
           inputId = "lines8",
           label   = "L4",
           min     = 0,
-          max     = 15,
+          max     = 10,
           value   = 0,
           step    = 1
         )
@@ -150,16 +150,16 @@ server <- function(input, output, session) {
   ### 2) Lógica LUS-HF según protocolo (>3 B-lines = congestión)
   congestion_flag <- reactive({
     if (total_lines() <= 3) {
-      "No (≤ 3 B-lines)"
+      "No (≤ 3 líneas B)"
     } else {
-      "Sí (> 3 B-lines)"
+      "Sí (> 3 líneas B)"
     }
   })
   
   ### 3) Renderizar texto de LUS-HF
   output$LUSHF <- renderText({
     paste0(
-      "Total B-lines: ", total_lines(), "\n",
+      "Total líneas B: ", total_lines(), "\n",
       "¿Congestión pulmonar? ", congestion_flag()
     )
   })
