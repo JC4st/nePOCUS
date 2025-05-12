@@ -1,93 +1,198 @@
 # app.R
 library(shiny)
+library(tidyverse)
+
+VExUStexto <- function(input, vu_score) {
+  if (input$renal == "no evaluado") {
+    paste("Grado VExUS:", vu_score, "\n",
+          "Patron de vena renal no evaluado por el médico tratante")
+  } else {
+    paste("Grado VExUS:", vu_score)
+  }
+}
 
 ui <- fluidPage(
   titlePanel("nePOCUS"),
   sidebarLayout(
     sidebarPanel(
       wellPanel(
-      h2("VExUS"),
-      img(src = "diagrama.jpeg", height = 550, width = 325, ),
-      # Diámetro IVC
-      numericInput(
-        inputId = "ivc",
-        label   = "Diámetro VCI (cm)",
-        value   = 1.5,
-        min     = 0,
-        max     = 5,
-        step    = 0.1
-      ),
-      # Patrones Doppler hepático
-      selectInput(
-        inputId = "hepatic",
-        label   = "Doppler vena hepática",
-        choices = c(
-          "S > D (Normal)"             = "normal",
-          "S < D (Mild Abn)"           = "mild",
-          "S Reversal (Severe Abn)"    = "severe"
+        h2("LUS-HF"),
+        img(src = "lus.jpeg", height = 550, width = 325),
+        # numero de lineas B en LUS
+        h3("Número de líneas B en LUS"),
+        sliderInput(
+          inputId = "lines",
+          label   = "R1",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
+        ),
+        sliderInput(
+          inputId = "lines2",
+          label   = "R2",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
+        ),
+        sliderInput(
+          inputId = "lines3",
+          label   = "R3",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
+        ),
+        sliderInput(
+          inputId = "lines4",
+          label   = "R4",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
+        ),
+        sliderInput(
+          inputId = "lines5",
+          label   = "L1",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
+        ),
+        sliderInput(
+          inputId = "lines6",
+          label   = "L2",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
+        ),
+        sliderInput(
+          inputId = "lines7",
+          label   = "L3",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
+        ),
+        sliderInput(
+          inputId = "lines8",
+          label   = "L4",
+          min     = 0,
+          max     = 15,
+          value   = 0,
+          step    = 1
         )
       ),
-      # Pulsatility Index portal
-      sliderInput(
-        inputId = "portal",
-        label   = "Índice de pulsatilidad vena porta (%)",
-        min     = 0,
-        max     = 100,
-        value   = 10,
-        step    = 1
-      ),
-      # Patrones Doppler intrarrenal
-      selectInput(
-        inputId = "renal",
-        label   = "Doppler vena intrarrenal",
-        choices = c(
-          "No evaluado"                                                  = "normal",
-          "Continuo monophasic (Normal)"                                 = "normal",
-          "Bifásico discontinuo (Levemente anormal)"                     = "mild",
-          "Monofásico discontinuo solo diastólico (Severamente anormal)" = "severe"
+      wellPanel(
+        h2("VExUS"),
+        img(src = "diagrama.jpeg", height = 550, width = 325),
+        # Diámetro IVC
+        numericInput(
+          inputId = "ivc",
+          label   = "Diámetro VCI (cm)",
+          value   = 1.5,
+          min     = 0,
+          max     = 5,
+          step    = 0.1
+        ),
+        # Patrones Doppler hepático
+        selectInput(
+          inputId = "hepatic",
+          label   = "Doppler vena hepática",
+          choices = c(
+            "S > D (Normal)"             = "normal",
+            "S < D (Mild Abn)"           = "mild",
+            "S Reversal (Severe Abn)"    = "severe"
+          )
+        ),
+        # Pulsatility Index portal
+        sliderInput(
+          inputId = "portal",
+          label   = "Índice de pulsatilidad vena porta (%)",
+          min     = 0,
+          max     = 100,
+          value   = 10,
+          step    = 1
+        ),
+        # Patrones Doppler intrarrenal
+        selectInput(
+          inputId = "renal",
+          label   = "Doppler vena intrarrenal",
+          choices = c(
+            "No evaluado"                                                  = "no evaluado",
+            "Continuo monophasic (Normal)"                                 = "normal",
+            "Bifásico discontinuo (Levemente anormal)"                     = "mild",
+            "Monofásico discontinuo solo diastólico (Severamente anormal)" = "severe"
+          )
         )
-      )
-    )),
+      )),
     mainPanel(
-      h4("Resultado VExUS:"),
-      verbatimTextOutput("score")
-    )
+      h4("Resultado POCUS:"),
+      verbatimTextOutput("LUSHF"),
+      verbatimTextOutput("VEXUS")
+    ),
   )
 )
 
+
 server <- function(input, output, session) {
-  output$score <- renderText({
-    # 1) Categorizar severidad del índice portal
-    portal_sev <- if (input$portal < 30) {
+  
+  ### 1) Calcular número total de líneas B
+  total_lines <- reactive({
+    sum(
+      input$lines, input$lines2, input$lines3, input$lines4,
+      input$lines5, input$lines6, input$lines7, input$lines8
+    )
+  })
+  
+  ### 2) Lógica LUS-HF según protocolo (>3 B-lines = congestión)
+  congestion_flag <- reactive({
+    if (total_lines() <= 3) {
+      "No (≤ 3 B-lines)"
+    } else {
+      "Sí (> 3 B-lines)"
+    }
+  })
+  
+  ### 3) Renderizar texto de LUS-HF
+  output$LUSHF <- renderText({
+    paste0(
+      "Total B-lines: ", total_lines(), "\n",
+      "¿Congestión pulmonar? ", congestion_flag()
+    )
+  })
+  
+  ### 4) Lógica de VExUS (igual que antes, sólo ajustes de salida)
+  portal_sev <- reactive({
+    if (input$portal < 30) {
       "normal"
     } else if (input$portal < 50) {
       "mild"
     } else {
       "severe"
     }
-    
-    # 2) Lógica de cálculo de VExUS
+  })
+  
+  vu_score <- reactive({
     if (input$ivc < 2) {
-      vu_score <- 0
+      0
     } else {
-      # contar patrones severos entre hepático, portal e intrarrenal
       severos <- sum(
         input$hepatic == "severe",
-        portal_sev      == "severe",
-        input$renal    == "severe"
+        portal_sev()    == "severe",
+        input$renal     == "severe"
       )
-      # asignar grado
-      vu_score <- switch(
+      as.numeric(switch(
         as.character(min(severos, 3)),
-        "0" = 1,
-        "1" = 2,
-        "2" = 3,
-        "3" = 3
-      )
+        "0" = 1, "1" = 2, "2" = 3, "3" = 3
+      ))
     }
-    
-    # 3) Devolver texto en pantalla
-    paste("Grado VExUS:", vu_score)
+  })
+  
+  output$VEXUS <- renderText({
+    VExUStexto(input, vu_score())
   })
 }
 
